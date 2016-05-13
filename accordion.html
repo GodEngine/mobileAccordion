@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<meta content="width=device-width, initial-scale=1.0" name="viewport">
+	<link rel="stylesheet" type="text/css" href="swiper-3.3.1.min.css">
+	<style type="text/css">
+		* {
+			box-sizing: border-box;
+			font-family: pingfang, "微软雅黑", sans-serif;
+		}
+
+		html,
+		body {
+			overflow: hidden;
+			height: 1000px;
+		}
+
+		.swiper-container {
+			width: 100%;
+			height: 150px;
+			position: fixed;
+		}
+
+		.sliderArea {
+			margin: 0 auto;
+			width: 80%;
+			height: 700px;
+			position: fixed;
+			top: 150px;
+			left: 10%;
+		}
+
+		.upSlider {
+			height: 100%;
+			width: 100%;
+			display: inline-block;
+			overflow: hidden;
+			position: relative;
+			border: 1px solid red;
+		}
+
+		.inner {
+			cursor: pointer;
+			display: inline-block;
+			float: left;
+			overflow: hidden;
+			position: absolute;
+			width: 600px;
+			transition: transform 1s;
+		}
+		.inner.up {
+			transform: translate3d(0, -100%, 0) !important;
+		}
+
+		img {
+			position: relative;
+			width: 100%;
+			height: 300px;
+		}
+
+		p {
+			position: relative;
+			top: -55px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="swiper-container">
+	    <div class="swiper-wrapper">
+	        <div class="swiper-slide">Slide 1</div>
+	        <div class="swiper-slide">Slide 2</div>
+	        <div class="swiper-slide">Slide 3</div>
+	    </div>
+	    <!-- 如果需要分页器 
+	    <div class="swiper-pagination"></div>-->
+	    
+	    <!-- 如果需要导航按钮 -->
+	    <div class="swiper-button-prev"></div>
+	    <div class="swiper-button-next"></div>
+	</div>
+	<section class="sliderArea">
+		<div class="upSlider" id="upSlider">
+		</div>
+	</section>
+	<script type="text/javascript">
+		;
+		(function () {
+			'use strict';
+
+			var imgs = [
+				'images/u1.jpg',
+				'images/u2.jpg',
+				'images/u3.jpg',
+				'images/u4.jpg',
+				'images/u5.jpg',
+				'images/u6.jpg',
+				'images/u7.jpg',
+				'images/u8.jpg',
+			];
+			var $container = document.getElementById('upSlider');
+			var imgConfig = {
+				container: $container,
+				offset: 40
+			}
+
+			function buildImg (data, config) {
+				var str = '';
+				var index = 0;
+				var len = data.length;
+				for (; index < len; index++) {
+					str += '<div class="inner" style="transform:translate3d(0, ' + (index * config.offset) + 'px, 0);z-index: ' + (len - index) + '"><img src="' + data[index] + '"></div>'
+				}
+
+				config.container.innerHTML = str;
+			}
+
+			function moveHandler (container, events) {
+				var start = {};
+				var end = {};
+
+				container.addEventListener('touchstart', function (e) {
+					start.x = e.touches[0].pageX;
+					start.y = e.touches[0].pageY;
+				});
+
+				container.addEventListener('touchmove', function (e) {
+					end.x = e.touches[0].pageX;
+					end.y = e.touches[0].pageY;
+				});
+
+				container.addEventListener('touchend', function () {
+					// up
+					if (start.y < end.y) {
+						events.down();
+					} else {
+						events.up();
+					}
+				});
+			}
+
+			function up () {
+				var $imgList = $container.querySelectorAll('.inner');
+				var $ups = $container.querySelectorAll('.inner.up');
+				if ($imgList.length === $ups.length + 1) return;	// 只剩下一个了 不能再划了
+
+				var init = !!($ups && $ups.length);	// 如果是第一次执行这个方法 是没有一个被隐藏的 所以length应该是0
+
+				if (init) {
+					// 如果已经有隐藏的 就找到隐藏的集合中最后一个的后边的元素
+					var $next = $ups[$ups.length - 1].nextElementSibling;
+					if ($next) {
+						$next.classList.add('up');	// 往上提一个
+					}
+				} else {
+					$imgList[0].classList.add('up');
+				}
+
+				var index = 0;
+				var len = $imgList.length;
+				// 循环给显示的卡片上移
+				for (; index < len; index++) {
+					var item = $imgList[index];
+					// 不存在up 说明该dom是显示的
+					if (!item.classList.contains('up')) {
+						item.style.transform = 'translate3d(0, ' + ((index - ($ups.length + 1)) * imgConfig.offset) + 'px, 0)';
+					}
+				}
+			}
+
+			function down () {
+				var $imgList = $container.querySelectorAll('.inner');
+				var $ups = $container.querySelectorAll('.inner.up');
+				if ($ups.length === 0) return;	// 说明已经没有隐藏的图片了
+
+				$ups[$ups.length - 1].classList.remove('up');
+				var index = 0;
+				var len = $imgList.length;
+				// 循环给显示的卡片上移
+				for (; index < len; index++) {
+					var item = $imgList[index];
+					// 不存在up 说明该dom是显示的
+					if (!item.classList.contains('up')) {
+						item.style.transform = 'translate3d(0, ' + ((index - ($ups.length - 1)) * imgConfig.offset) + 'px, 0)';
+					}
+				}
+			}
+
+			buildImg(imgs, imgConfig);
+			moveHandler($container, {
+				up: up,
+				down: down
+			})
+
+		})();
+
+	</script>
+	</script>
+</body>
+
+</html>

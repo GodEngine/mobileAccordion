@@ -1,0 +1,46 @@
+* {
+	    box-sizing: border-box;
+	    font-family: pingfang,"微软雅黑",sans-serif;
+	}
+	html,body {
+		overflow: hidden;
+		height: 100%;
+	}
+	.swiper-container {
+    	width: 100%;
+    	height: 150px;
+    	position: fixed;
+	} 
+	.sliderArea {
+		margin: 0 auto;
+		width: 80%;
+		height:700px;
+		position: fixed;
+		top: 150px;
+		left: 10%;
+	}
+	.upSlider {
+		height: 100%;
+		width: 100%;
+		display: inline-block;
+	    overflow: hidden;
+	    position: relative;
+	    border: 1px solid red;
+	}
+	.inner {
+	    cursor: pointer;
+	    display: inline-block;
+	    float: left;
+	    overflow: hidden;
+	    position: absolute;
+	    width: 600px;
+	}
+	img {
+		position: relative;
+		width: 100%;
+		height: 300px;
+	}
+	p {
+		position: relative;
+		top: -55px;
+	}
