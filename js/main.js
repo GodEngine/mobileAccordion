@@ -1,91 +1,80 @@
+;
+(function($，window){
+	$.fn.accordion = function(options){
 
-	 ;(function(){
-	 	var lock = true;
+		var option = $.extend({
+			"container": document.getElementById('upSlider'),
+			"offset": 3.2,			//手风琴间距rem
+			"img": [],
+			"direction":"Vertical"    		//方向
+		},options);
 
-		var img_cache = $(".inner"),
-		sliderArea = document.querySelector("#sliderArea"),
-		main_focus = document.querySelector(".main_focus"),
-		total = 3;
-		//判断是否为首尾图片，不是的情况下移除当前元素的touch处理事件
-		var ifAnimate = function (ele,arg){
-/*    		var nextOne = ele.nextSibling,
-    		previousOne = ele.previousSibling;
-
-    		nextOne = nextOne.nodeType==3?nextOne.nextSibling:nextOne;
-    		previousOne = previousOne.nodeType==3?previousOne.previousSibling:previousOne;*/
-    		var nextOne = ele.nextElementSibling,
-			previousOne = ele.previousElementSibling;
-
-    		if(!previousOne && arg) {
-    			return false;
-    		}else if(!nextOne && !arg){
-    			return false;
-    		};
-
-    		ele.classList.remove("active");
-    		handler.eventRemove.call(ele,"Vertical");
-
-    		arg?previousOne.classList.add("active"):nextOne.classList.add("active");
-    		var blindObj = document.querySelector(".active");
-    		handler.eventBind.call(blindObj,"Vertical");
-    		return true;
-        };
-
-		//动画处理对象，包括当前元素上滑动与下滑动，整体元素的上移
+		//动画处理对象，在上下左右滑动时应做的事
 		var animate = {
-			"index": 0,
-			"_AnimateUp": function(obj){
-				if(!ifAnimate(obj,false))return;
-				lock=false;
-				sliderArea.classList.contains("sliderArea_")?undefined:sliderArea.classList.add("sliderArea_");
-				img_cache.map(function(){
-					var top = $(this).css("top");
-					if (this.style.zIndex==4) {console.log(top)};
-					top = (parseFloat(top)-3.2).toFixed(1)+"rem";
-					$(this).animate({top:top},500,'ease-out');
-				});
+			"_AnimateUp": function(){
 
-				$(obj).animate({
-		        top:
-		        '-11.125rem'
-		        }, 500,
-		        'ease-out');
-		        lock = true;
+				var $imgList = $container.querySelectorAll('.inner');
+				var $ups = $container.querySelectorAll('.inner.up');
+
+
+				if ($imgList.length === $ups.length + 1){
+					return;	// 只剩下一个了 不能再划了
+				}; 
+
+
+				var init = !!($ups && $ups.length);	// 如果是第一次执行这个方法 是没有一个被隐藏的 所以length应该是0
+
+				if (init) {
+					// 如果已经有隐藏的 就找到隐藏的集合中最后一个的后边的元素
+					var $next = $ups[$ups.length - 1].nextElementSibling;
+					if ($next) {
+						$next.classList.add('up');	// 往上提一个
+					}
+				} else {
+					$imgList[0].classList.add('up');
+				}
+
+				var index = 0;
+				var len = $imgList.length;
+				// 循环给显示的卡片上移
+				for (; index < len; index++) {
+					var item = $imgList[index];
+					// 不存在up 说明该dom是显示的
+					if (!item.classList.contains('up')) {
+						item.style.transform = 'translate3d(0, ' + ((index - ($ups.length + 1)) * option.offset).toFixed(1) + 'rem, 0)';
+					}
+				}
 			},
-			"_AnimateDown": function(obj){
-				if(!ifAnimate(obj,true))return;
-				lock=false;
-				sliderArea.classList.contains("sliderArea_")?sliderArea.classList.remove("sliderArea_"):undefined;
-				var priviousOne = obj.previousSibling.previousSibling;
-				img_cache.map(function(){
-					var top = $(this).css("top");
-					top = (parseFloat(top)+3.2).toFixed(1)+"rem"; 
-					$(this).animate({top:top},500,'ease-out');
-				});
+			"_AnimateDown": function(){
+				var $imgList = $container.querySelectorAll('.inner');
+				var $ups = $container.querySelectorAll('.inner.up');
+				tips.style.display="none";
+				if ($ups.length === 0) return;	// 说明已经没有隐藏的图片了
 
-				$(priviousOne).animate({
-		        top:
-		        '0rem'
-		        }, 500,
-		        'ease-out');
-		        lock = true;
+				sliderArea.classList.contains("sliderArea_")?sliderArea.classList.remove("sliderArea_"):undefined;
+
+				$ups[$ups.length - 1].classList.remove('up');
+				var index = 0;
+				var len = $imgList.length;
+				// 循环给显示的卡片上移
+				for (; index < len; index++) {
+					var item = $imgList[index];
+					// 不存在up 说明该dom是显示的
+					if (!item.classList.contains('up')) {
+						item.style.transform = 'translate3d(0, ' + ((index - ($ups.length - 1)) * option.offset).toFixed(1) + 'rem, 0)';
+					}
+				}
 			},
 			"_AnimateRight": function(){
-				var right = ((++animate.index)*10.8).toFixed(1);	
-
-				main_focus.style.transform = "translate3d("+right+"rem, 0rem, 0rem)";
-				main_focus.style.transitionDuration = "300ms";
+				//do something
 			},
 			"_AnimateLeft": function(){
-				var left = ((--animate.index)*10.8).toFixed(1);
-
-				main_focus.style.transform = "translate3d("+left+"rem, 0rem, 0rem)";
-				main_focus.style.transitionDuration = "300ms";
+				//do something
 			}
 
 		};
 
-	 	//事件处理对象，包括touch事件处理、监听和移除
+		//touch事件监听句柄
 		var handler = {
 			"touchstart": function(e){
 				e.preventDefault();
@@ -104,61 +93,88 @@
 	    		this.end_.X = e.touches[0].screenX;
 	    		this.end_.Y = e.touches[0].screenY;
 
-	    		if (animate.index==0 && this.start_.X < this.end_.X) {
-	    			animate.index=-total;
-	    			main_focus.style.transform = "translate3d("+(-total*10.8)+"rem, 0rem, 0rem)";
-	    			main_focus.style.transitionDuration = "0ms";
-	    		}else if(animate.index==-total+1 && this.start_.X > this.end_.X){
-	    			animate.index=1;
-	    			main_focus.style.transform = "translate3d("+10.8+"rem, 0rem, 0rem)";
-	    			main_focus.style.transitionDuration = "0ms";
+
+	    		if (this.start_.X < this.end_.X) {
+	    			// right
+	    		}else if(this.start_.X > this.end_.X){
+					//left
 	    		}
 	    	},
 	    	"touchendVertical": function(e){
 				e.preventDefault();
 
-				if(!lock)return;
 	    		if (this.start_.Y < this.end_.Y) {  			
-					animate._AnimateDown(this);
+					animate._AnimateDown();
 				} else {
-					animate._AnimateUp(this);
+					animate._AnimateUp();
 				}
 	    	},
 	    	"touchendHorizontal": function(e){
 				e.preventDefault();
 
 	    		if (this.start_.X < this.end_.X) {  			
-					animate._AnimateRight.call(this);
+					//Right
 				} else {
-					animate._AnimateLeft.call(this);
+					//Left
 				}
-	    	},
-	    	"eventBind": function(direction){
-		    	this.start_={},this.end_={};
-		    	this.addEventListener('touchstart',handler.touchstart, false);
-		    	this.addEventListener('touchmove',handler["touchmove"+direction], false);
-		    	this.addEventListener('touchend',handler["touchend"+direction], false);
-	    	},
-	    	"eventRemove": function(direction){
-		    	this.removeEventListener('touchstart',handler.touchstart,false);
-		   		this.removeEventListener('touchmove',handler["touchmove"+direction], false);
-		    	this.removeEventListener('touchend',handler["touchend"+direction], false);
 	    	}
 		};
 
+		//初始化图片
+		function buildImg (option) {
 
-        $(function(){
-			var mySwiper = new Swiper ('.swiper-container', {	    
-			    pagination: '.swiper-pagination'   
-			 });
+			var str = '';
+			var index = 0;
+			var data = option.img;
 
-			var active = document.querySelector(".active");
-			//handler.eventBind.call(active,"touchendVertical");
-			handler.eventBind.call(active,"Vertical");
+			var len = data.length;
+			for (; index < len; index++) {
+				str += '<div class="inner" style="transform:translate3d(0, ' + (index * option.offset) + 'rem, 0);z-index: ' + (len - index) + '"><img src="' + data[index] + '"></div>'
+			}
 
-			var main_focus = document.querySelector(".main_focus");
-			//handler.eventBind.call(main_focus,"touchendHorizontal");
-			handler.eventBind.call(main_focus,"Horizontal");
-		})
+			option.container.innerHTML = str;
+		}
 
-	})();
+		buildImg(option);
+
+		return this.each(function(){
+			this.start_={},this.end_={};
+	    	this.addEventListener('touchstart',handler.touchstart, false);
+	    	this.addEventListener('touchmove',handler["touchmove"+option.direction], false);
+	    	this.addEventListener('touchend',handler["touchend"+option.direction], false);
+		});
+
+	};
+})(jQuery，window);
+
+/*
+	需要jQuery支持以及：
+	
+	一，容器（默认查找id为upSlider的容器）,图片（[img1,img2,img3...]）
+	
+	二，样式支持
+	
+	容器样式
+	#upSlider {
+		height: 100%;
+		width: 100%;
+		display: inline-block;
+	    overflow: hidden;
+	    position: relative;
+	}
+
+	rem为单位的length
+
+	.inner {
+		cursor: pointer;
+	    display: inline-block;
+	    overflow: hidden;
+	    position: absolute;
+	    transition: transform 1s;
+	}
+
+	.inner.up {		
+			transform: translate3d(0, -100%, 0) !important;
+	}
+
+*/
